@@ -63,6 +63,186 @@ func (p *People) GetName() string {
 
 
 
+
+
+####  继承
+
+* 按照传统面向对象思想,继承就是把同一类事物提出共同点为父类,让子类可以复用父类的可访问性内容.
+* 继承有多种实现方式
+  * 通过关键字继承,强耦合实现方式
+  * 组合式继承,松耦合继承方式
+* 使用过Java或C#的应该知道尽量少用继承而是使用组合代替继承,可以使用高内聚,低耦合.Java之父之前在一次采访的时候也说过,如果给他一次机会重新做Java,他最希望修改的地方就是继承
+* Go语言中的继承是通过组合实现
+
+##### 使用匿名属性完成Go语言中的继承
+
+* Go语言中的继承很好实现,把另一个结构体类型当作另一个结构体的属性,可以直接调用另一个结构体中的内容
+
+* 因为Go语言中结构体不能相互转换,所以不能把子结构体变量赋值给父结构体变量
+
+* ##### 结构体之间的关系
+
+  * 传统面向对象中类与类之间的关系
+    * 继承:is-a,强耦合性,一般认为类与类之间具有强关系
+    * 实现:like-a,接口和实现类之间的关系
+    * 依赖:use-a,具有偶然性的、临时性的、非常弱的，但是B类的变化会影响到A,一般作为方法参数
+    * 关联:has-a一种强依赖关系，比如我和我的朋友；这种关系比依赖更强、不存在依赖关系的偶然性、关系也不是临时性的，一般是长期性的，而且双方的关系一般是平等的、关联可以是单向、双向的
+    * 聚合:has-a,整体与部分、拥有的关系
+    * 组合:contains-a,他体现的是一种contains-a的关系，这种关系比聚合更强，也称为强聚合；他同样体现整体与部分间的关系，但此时整体与部分是不可分的，整体的生命周期结束也就意味着部分的生命周期结束
+    * 组合>聚合>关联>依赖
+  * Go语言中标准的组合关系
+
+```go
+type People struct {
+	name string
+	age  int
+}
+
+type Teacher struct {
+	peo       People
+	classroom string //班级
+}
+
+func main() {
+	teacher := Teacher{People{"smallming", 17}, "302教室"}
+	//必须通过包含的变量名调用另一个结构体中内容
+	fmt.Println(teacher.classroom, teacher.peo.age, teacher.peo.name)
+    	fmt.Println(teacher.classroom, teacher.age, teacher.name)//错误
+}
+```
+
+
+
+#### 多态
+
+* 多态:同一件事情由于条件不同产生的结果不同
+* 由于Go语言中结构体不能相互转换,所以没有结构体(父子结构体)的多态,只有基于接口的多态.这也符合Go语言对面向对象的诠释
+* 多态在代码层面最常见的一种方式是接口当作方法参数
+
+
+##### 代码示例
+
+* 结构体实现了接口的全部方法,就认为结构体属于接口类型,这是可以把结构体变量赋值给接口变量
+* 重写接口时接收者为`Type`和`*Type`的区别
+  * `*Type`可以调用`*Type`和`Type`作为接收者的方法.所以只要接口中多个方法中至少出现一个使用`*Type`作为接收者进行重写的方法,就必须把结构体指针赋值给接口变量,否则编译报错
+  * `Type`只能调用`Type`作为接收者的方法
+
+```go
+type Live interface {
+	run()
+	eat()
+}
+type People struct {
+	name string
+}
+
+func (p *People) run() {
+	fmt.Println(p.name, "正在跑步")
+}
+func (p People) eat() {
+	fmt.Println(p.name, "在吃饭")
+}
+
+func main() {
+	//重写接口时
+	var run Live = &People{"张三"}
+	run.run()
+	run.eat()
+}
+```
+
+* 既然接口可以接收实现接口所有方法的结构体变量,接口也就可以作为方法(函数)参数
+
+```go
+type Live interface {
+	run()
+}
+type People struct{}
+type Animate struct{}
+
+func (p *People) run() {
+	fmt.Println("人在跑")
+}
+func (a *Animate) run() {
+	fmt.Println("动物在跑")
+}
+
+func sport(live Live) {
+	fmt.Println(live.run)
+}
+
+func main() {
+	peo := &People{}
+	peo.run() //输出:人在跑
+	ani := &Animate{}
+	ani.run() //输出:动物在跑
+}
+```
+
+ 
+
+#### 断言
+
+* 只要实现了接口的全部方法认为这个类型属于接口类型,如果编写一个接口,这个接口中没有任何方法,这时认为所有类型都实现了这个接口.所以Go语言中`interface{}`代表任意类型
+* 如果`interface{}`作为方法参数就可以接收任意类型,但是在程序中有时有需要知道这个参数到底是什么类型,这个时候就需要使用断言
+* 断言使用时使用interface{}变量点括号,括号中判断是否属于的类型
+
+```go
+i interface{}
+i.(Type)
+```
+
+* 断言的两大作用:
+  * 判断是否是指定类型
+  * 把interface{}转换为特定类型
+
+##### 代码示例
+
+* 断言可以有一个返回值,如果判断结果是指定类型返回变量值,如果不是指定类型报错
+
+```go
+func demo(i interface{}){
+	result:=i.(int)
+	fmt.Println(result)
+}
+
+func main() {
+	/*
+	参数是456时,程序运行正常,输出:
+		456
+	参数是false时报错：
+		panic: interface conversion: interface {} is bool, not int
+	 */
+	demo(456)
+}
+```
+
+* 断言也可以有两个返回值,这时无论是否是指定类型都不报错.
+  * 第一个参数:
+    * 如果正确:返回值变量值
+    * 如果错误:返回判断类型的默认值
+  * 第二个参数:
+    * 返回值为bool类型,true表示正确,false表示错误
+
+```go
+func demo(i interface{}) {
+	result, ok := i.(int)
+	fmt.Println(result, ok)
+}
+
+func main() {
+	/*
+	参数是456时,程序运行正常,输出:
+		456	true
+	参数是字符串"abc"时程序运行正常,输出:
+		0 false
+	 */
+	demo("abc")
+}
+```
+
+  
+
 ### 结构体
 
 + 由于结构体是值类型,在方法传递时希望传递结构体地址,可以使用时结构体指针完成
@@ -137,6 +317,595 @@ func main() {
 ```
 
 
+
+
+
+#### 错误处理
+
+* 在程序执行过程中出现的不正常情况称为错误
+* Go语言中使用builtin包下error接口作为错误类型,官方源码定义如下
+  * 只包含了一个方法,方法返回值是string,表示错误信息
+
+* Go语言中错误都作为方法/函数的返回值,因为Go语言认为使用其他语言类似try...catch这种方式会影响到程序结构
+* 在Go语言标准库的errors包中提供了error接口的实现结构体errorString,并重写了error接口的Error()方法.额外还提供了快速创建错误的函数
+
+```go
+单个错误
+e = errors.New("初始不能为0") //自定义错误
+return e
+
+多个错误
+e = fmt.Errorf("%s%d和%d", "除数不能是0,两个参数分别是:", i, k)
+return e
+
+接收
+result,error:=demo(6,0)
+```
+
+
+
+
+
+defer使用
+
+* Go语言中defer可以完成延迟功能,当前函数执行完成后执行defer功能
+* defer最常用的就是关闭连接(数据库连接,文件等)可以打开连接后代码紧跟defer进行关闭,后面在执行其他功能
+  * 在很多语言中要求必须按照顺序执行,也就是必须把关闭代码写在最后,但是经常会忘记关闭导致内存溢出,而Golang中defer很好的解决了这个问题.无论defer写到哪里都是最后执行
+* 多重defer采用栈结构执行,先产生后执行
+* 在很多代码结构中都可能出现产生多个对象,而程序希望这些对象倒序关闭,多个defer正好可以解决这个问题
+
+```go
+func main() {
+   fmt.Println("打开连接A")
+   defer func(){
+      fmt.Println("关闭连接A")
+   }()
+   fmt.Println("打开连接B")
+   defer func(){
+      fmt.Println("关闭连接B")
+   }()
+   fmt.Println("进行操作")
+   //输出:打开连接A 打开连接B 进行操作 关闭连接B 关闭连接A
+}
+```
+
+
+
+#### defer和return结合
+
+* defer与return同时存在时,要把return理解成两条执行结合(不是原子指令),一个指令是给返回值赋值,另一个指令返回跳出函数
+
+* defer和return时整体执行顺序
+  * 先给返回值赋值
+  * 执行defer
+  * 返回跳出函数
+
+* 没有定义返回值接收变量,执行defer时返回值已经赋值
+
+```go
+func f() int{
+	i:=0
+	defer func(){
+		i=i+2
+	}()
+	return i
+}
+
+func main() {
+	fmt.Println(f())//输出:0
+}
+```
+
+* 声明接收返回值变量,执行defer时修改了返回值内容.
+  * 由于return后面没有内容,就无法给返回值赋值,所以执行defer时返回值才有内容
+
+```go
+func f() (i int){
+	defer func(){
+		i=i+2
+	}()
+	return
+}
+func main() {
+	fmt.Println(f())//输出:2
+}
+```
+
+  
+
+##### panic
+
+* panic是builtin中函数
+
+* panic有点类似与其他编程语言的throw,抛出异常.当执行到panic后终止剩余代码执行.并打印错误栈信息
+
+```go
+func main() {
+   fmt.Println("1")
+   panic("panic执行了,哈哈")
+   fmt.Println("2")//不会执行
+}
+```
+
+* 注意panic不是立即停止程序(os.Exit(0)),defer还是执行的.
+
+
+```go
+func main() {
+   defer func(){
+      fmt.Println("defer执行")
+   }()
+   fmt.Println("1")
+   panic("panic执行了,哈哈")
+   fmt.Println("2")
+}
+```
+
+#### .recover
+
+* recover()表示恢复程序的panic(),让程序正常运行
+* recover()是和panic(v)一样都是builtin中函数,可以接收panic的信息,恢复程序的正常运行
+
+* recover()一般用在defer内部,如果没有panic信息返回nil,如果有panic,recover会把panic状态取消
+
+```go
+func main() {
+	defer func() {
+		if error:=recover();error!=nil{
+			fmt.Println("出现了panic,使用reover获取信息:",error)
+		}
+	}()
+	fmt.Println("11111111111")
+	panic("出现panic")
+	fmt.Println("22222222222")
+}
+```
+
+* 输出
+
+```
+11111111111
+出现了panic,使用reover获取信息: 出现panic
+```
+
+#### 函数调用过程中panic和recover()
+
+* recover()只能恢复当前函数级或当前函数调用函数中的panic(),恢复后调用当前级别函数结束,但是调用此函数的函数可以继续执行.
+* panic会一直向上传递,如果没有recover()则表示终止程序,但是碰见了recover(),recover()所在级别函数表示没有panic,panic就不会向上传递
+
+```go
+func demo1(){
+	fmt.Println("demo1上半部分")
+	demo2()
+	fmt.Println("demo1下半部分")
+}
+func demo2(){
+	defer func() {
+		recover()//此处进行恢复
+	}()
+	fmt.Println("demo2上半部分")
+	demo3()
+	fmt.Println("demo2下半部分")
+}
+func demo3(){
+	fmt.Println("demo3上半部分")
+	panic("在demo3出现了panic")
+	fmt.Println("demo3下半部分")
+}
+func main() {
+	fmt.Println("程序开始")
+	demo1()
+	fmt.Println("程序结束")
+}
+```
+
+
+
+
+
+#### 文件
+
+#####  资源路径
+
+* 在获取系统资源时资源路径分为相对路径和绝对路径
+* 相对路径:在Go语言中相对路径用于是GOPATH,也就是项目的根目录
+* 绝对路径:磁盘根目录开始表示资源详细路径的描述
+Go语言标准库中提供了两种创建文件夹的方式
+
+```go
+	/*
+	要求文件夹不存在且父目录必须存在,才能创建
+	 */
+	//error := os.Mkdir("D:/godir", os.ModeDir)
+	//if error != nil {
+	//	fmt.Println("文件夹创建失败",error)
+	//	return
+	//}
+	//fmt.Println("文件夹创建成功")
+
+
+	/*
+	如果文件夹已经存在,不报错,保留原文件夹
+	如果父目录不存在帮助创建
+	 */
+	error := os.MkdirAll("D:/godir/a/b", os.ModeDir)
+	if error != nil {
+		fmt.Println("文件夹创建失败",error)
+		return
+	}
+	fmt.Println("文件夹创建成功")
+```
+
+* 创建空文件
+
+```go
+	/*
+	创建文件时要求文件目录必须已经存在
+	如果文件已经存在则会创建一个空文件覆盖之前的文件
+	 */
+	file, err := os.Create("D:/godir/test.txt")
+	if err != nil {
+		fmt.Println("文件创建失败,", err)
+		return
+	}
+	fmt.Println("文件创建成功",file.Name())
+```
+
+* 重命名文件或文件夹
+
+```go
+	/*
+	第一个参数:原文件夹名称,要求此路径是必须存在的
+	第二个参数:新文件夹名称
+	 */
+	err := os.Rename("D:/godir", "D:/godir1")
+	if err != nil {
+		fmt.Println("重命名文件夹失败,", err)
+		return
+	}
+	fmt.Println("文件夹重命名成功")
+
+	/*
+	重命名文件和重命名文件夹用法相同
+	 */
+	err = os.Rename("D:/godir1/test.txt", "D:/godir1/test1.txt")
+	if err != nil {
+		fmt.Println("重命名文件失败,", err)
+		return
+	}
+	fmt.Println("文件重命名成功")
+```
+
+* 获取文件(夹)信息
+
+```go
+	f, err := os.Open("D:/godir1/test1.txt")
+	defer f.Close() //文件打开后要关闭,释放资源
+	if err != nil {
+		fmt.Println("打开文件失败", err)
+		return
+	}
+	fileInfo, err := f.Stat()
+	if err != nil {
+		fmt.Println("获取文件信息失败", err)
+		return
+	}
+	fmt.Println(fileInfo.Name())    //文件名
+	fmt.Println(fileInfo.IsDir())   //是否是文件夹,返回bool,true表示文件夹,false表示文件
+	fmt.Println(fileInfo.Mode())    //文件权限
+	fmt.Println(fileInfo.ModTime()) //修改时间
+	fmt.Println(fileInfo.Size())    //文件大小
+```
+
+* 删除文件或文件夹
+
+```go
+	/*
+	删除的内容只能是一个文件或空文件夹且必须存在
+	 */
+	//err := os.Remove("D:/godir1/a")
+	//if err != nil {
+	//	fmt.Println("文件删除失败", err)
+	//	return
+	//}
+	//fmt.Println("删除成功")
+
+	/*
+	只要文件夹存在,删除文件夹.
+	无论文件夹是否有内容都会删除
+	如果删除目标是文件,则删除文件
+	 */
+	err := os.RemoveAll("D:/godir1/a.txt")
+	if err != nil {
+		fmt.Println("删除失败", err)
+		return
+	}
+	fmt.Println("删除成功")
+```
+
+  
+
+#### Reader
+
+* 流(stream)是应用程序和外部资源进行数据交互的纽带
+* 流分为输入流和输出流,输入和输出都是相对于程序,把外部数据传入到程序中叫做输入,反之叫做输出流
+* 输入流(Input Stream),输入流(Output Stream) 平时所说的I/O流
+* 在Go语言标准库中io包下是Reader接口表示输入流,只要实现这个接口就属于输入流
+
+##### 代码演示
+
+* 可以使用strings包下的NewReader创建字符串流
+
+```go
+	r := strings.NewReader("hello 世界")
+	b := make([]byte, r.Size())//创建字节切片,存放流中数据,根据流数据大小创建切片大小
+	n, err := r.Read(b)//把流中数据读取到切片中
+	if err != nil {
+		fmt.Println("读取失败,", err)
+		return
+	}
+	fmt.Println("读取数据长度,", n)
+
+	fmt.Println("流中数据",string(b))//以字符串形式输入切片中数据
+```
+
+* 最常用的是文件流,把外部文件中数据读取到程序中
+
+```go
+	f, err := os.Open("D:/go.txt")//打开文件
+	defer f.Close()
+	if err != nil {
+		fmt.Println("文件读取失败,", err)
+		return
+	}
+	fileInfo, err := f.Stat()//获取文件信息
+	if err != nil {
+		fmt.Println("文件信息获取失败,", err)
+		return
+	}
+	b := make([]byte, fileInfo.Size())//根据文件中数据大小创建切片
+	_, err = f.Read(b)//读取数据到切片中
+	if err != nil {
+		fmt.Println("文件流读取失败:", err)
+		return
+	}
+	fmt.Println("文件中内容为:", string(b))//以字符串形式输入切片中数据
+```
+
+  
+
+
+
+#### 输入流
+
+* 输入流就是把程序中数据写出到外部资源
+* Go语言标准库中输出流是Writer接口
+
+# 代码操作
+
+* 注意:输入流时不要使用`os.Open()`因为这种方式获取的文件是只读的
+
+```go
+	fp := "D:/go.txt"
+	/*
+	第三个参数表示文件权限
+	第 1 位在权限中总是为 0
+	第 2 位为 0 表示文件不可以被读， 为 1 表示可以被读
+	第 3 位为 0 表示文件不可以被写， 为 1 表示可以被写
+	第 4 位为 0 表示文件不可以被执行， 为 1 表示可以被执行
+	整理如下:
+	   0(0000): 不可读写,不能被执行
+	   1(0001): 不可读写,能被执行
+	   2(0010): 可写不可读,不能被执行
+	   3(0011): 可写不可读,能被执行
+	   4(0100): 可读不可写,不能被执行
+	   5(0101): 可读不可写,能被执行
+	   6(0110): 可读写,不能执行
+	   7(0111): 可读写,可执行
+
+	0666:
+	第一个 0 表示这个数是 八进制
+	第一个 6 表示文件拥有者有读写权限，但没有执行权限
+	第二个 6 表示文件拥有者同组用户有读写权限，但没有执行权限
+	第三个 6 表示其它用户有读写权限，但没有执行权限
+
+	 */
+
+	//第二个参数表示文件内容追加
+	//第三个参数表示创建文件时文件权限
+	f, err := os.OpenFile(fp, os.O_APPEND, 0660)
+	defer f.Close()
+	if err != nil {
+		fmt.Println("文件不存在,创建文件")
+		f, _ = os.Create(fp)
+	}
+
+	/*
+	内容中识别特殊字符
+	\r\n 换行
+	\t 缩进
+	 */
+
+	/*
+	使用文件对象重写的Writer接口,参数是[]byte
+	 */
+	f.Write([]byte("使用Writer接口写数据\r\n"))
+
+	/*
+	使用stringWriter接口的方法,参数是字符串,使用更方便
+	 */
+	f.WriteString("写了\t一段\r\n内容123")
+	fmt.Println("程序执行结束")
+```
+
+  
+
+
+
+#### ioutil
+
+##### 代码演示
+
+* 打开完文件后可以使用ReadAll把文件中所有内容都读取到
+
+```go
+	f, err := os.Open("D:/go.txt")
+	defer f.Close()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	b, err := ioutil.ReadAll(f)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println("文件中内容:\n", string(b))
+```
+
+* 也可以直接读取文件中内容
+
+```go
+	b, err := ioutil.ReadFile("D:/go.txt")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(string(b))
+```
+
+* 写文件也很简单,直接使用WriteFile函数即可,但是源码中已经规定此文件只能是可写状态,且不是尾加数据
+
+```go
+	err := ioutil.WriteFile("D:/abc.txt", []byte("内容123123"), 0666)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println("数据写入成功")
+```
+
+* 还提供了快速获取某个文件夹中所有文件信息的函数
+
+```go
+	fs,_:=ioutil.ReadDir("D:/")
+	for _,n := range fs {
+		fmt.Println(n.Name())
+	}
+```
+
+  
+
+#### Reflect反射介绍
+
+* 在Go语言标准库中reflect包提供了运行时反射,程序运行过程中动态操作结构体
+* 当变量存储结构体属性名称,想要对结构体这个属性赋值或查看时,就可以使用反射.
+* 反射还可以用作判断变量类型
+* 整个reflect包中最重要的两个类型
+  * reflect.Type 类型
+  * reflect.Value 值
+* 获取到Type和Value的函数
+  * reflect.TypeOf(interface{}) 返回Type
+  * reflect.ValueOf(interface{}) 返回值Value
+
+##### 代码示例
+
+* 判断变量类型
+
+```go
+   a:=1.5
+   fmt.Println(reflect.TypeOf(a))
+```
+
+* 获取结构体属性的值
+
+```go
+type People struct {
+   Id   int
+   Name string
+}
+
+func main() {
+   fmt.Println("asdf")
+
+   peo := People{1, "张三"}
+
+   //获取peo的值
+   v := reflect.ValueOf(peo)
+   //获取属性个数,如果v不是结构体类型panic
+   fmt.Println(v.NumField())
+
+   //获取第0个属性,id,并转换为int64类型
+   fmt.Println(v.Field(0).Int())
+   //获取第1个属性,转换换为string类型
+   fmt.Println(v.Field(1).String())
+
+   //根据名字获取类型,并把类型名称转换为string类型
+   idValue := v.FieldByName("Id")
+   fmt.Println(idValue.Kind().String())
+
+}
+```
+
+* 设置结构体属性的值时要传递结构体指针,否者无法获取设置的结构体对象
+  * 反射直射结构体属性时,要求属性名首字母必须大写,否则无法设置
+
+```go
+package main
+
+import (
+   "fmt"
+   "reflect"
+)
+
+type People struct {
+   Id   int
+   Name string
+}
+
+func main() {
+   fmt.Println("asdf")
+   peo := People{1, "张三"}
+
+   /*
+   反射时获取peo的地址.
+   Elem()获取指针指向地址的封装.
+   地址的值必须调用Elem()才可以继续操作
+    */
+   v := reflect.ValueOf(&peo).Elem()
+
+   fmt.Println(v.FieldByName("Id").CanSet())
+   v.FieldByName("Id").SetInt(123)
+   v.FieldByName("Name").SetString("李四")
+   fmt.Println(peo)
+}
+```
+
+* 结构体支持标记(tag),标记通常都是通过反射技术获取到.结构体标记语法
+
+```go
+type 结构体名称 struct{
+  属性名 类型 `key:"Value"`
+}
+```
+
+* 获取结构体标记(tag)
+
+```go
+type People struct {
+	Name    string `xml:"name"`
+	Address string `xml:"address"`
+}
+
+func main() {
+	t:=reflect.TypeOf(People{})
+	name,_:=t.FieldByName("Name")
+	fmt.Println(name.Tag)//获取完整标记
+	fmt.Println(name.Tag.Get("xml"))//获取标记中xml对应内容
+}
+```
+
+  
 
 ### 值传递和引用传递
 
@@ -857,3 +1626,422 @@ func test1() func() int {
 
 
 
+#### 日志简介
+
+* 使用开发工具时,控制台打印的信息就是日志信息
+* 项目最终发布后是没有开发工具的,而需要记录日志应该把信息输出到文件中,这个功能也是日志的功能
+* 在Go语言标准的log包提供了对日志的支持
+* 有三种级别日志输出
+  * Print() 输出日志信息
+  * Panic()  打印日志信息,并触发panic,日志信息为Panic信息
+  * Fatal()  打印日志信息后调用os.Exit(1)
+* 所有日志信息打印时都带有时间,且颜色为红色
+* 每种级别日志打印都提供了三个函数
+  * Println()
+  * Print()
+  * Printf()
+* 日志文件扩展名为log
+
+##### 普通日志信息打印
+
+* 官方源码如下
+
+```go
+func Println(v ...interface{}) {
+	std.Output(2, fmt.Sprintln(v...))
+}
+```
+
+* 直接使用log包调用Println()即可
+
+```go
+log.Println("打印日志信息")
+```
+
+##### Panic日志信息打印
+
+* 通过源码可以看出在日志信息打印后调用了panic()函数,且日志信息为panic信息
+
+```go
+// Panicln is equivalent to Println() followed by a call to panic().
+func Panicln(v ...interface{}) {
+	s := fmt.Sprintln(v...)
+	std.Output(2, s)
+	panic(s)
+}
+```
+
+* 执行后输出日志信息,同时也会触发panic
+
+```go
+log.Panicln("打印日志信息")
+```
+
+##### 四.致命日志信息
+
+* 打印日志后,终止程序
+
+```go
+// Fatal is equivalent to Print() followed by a call to os.Exit(1).
+func Fatal(v ...interface{}) {
+	std.Output(2, fmt.Sprint(v...))
+	os.Exit(1)
+}
+```
+
+* 执行日志打印后,程序被终止
+
+```go
+log.Fatal("打印日志信息")
+```
+
+##### 打印日志信息到文件中
+
+* Go语言标准库支持输出日志信息到文件中.
+* 输出日志时的几种状态
+
+```go
+const (
+	Ldate         = 1 << iota     // the date in the local time zone: 2009/01/23
+	Ltime                         // the time in the local time zone: 01:23:23
+	Lmicroseconds                 // microsecond resolution: 01:23:23.123123.  assumes Ltime.
+	Llongfile                     // full file name and line number: /a/b/c/d.go:23
+	Lshortfile                    // final file name element and line number: d.go:23. overrides Llongfile
+	LUTC                          // if Ldate or Ltime is set, use UTC rather than the local time zone
+	LstdFlags     = Ldate | Ltime // initial values for the standard logger
+)
+```
+
+* 代码如下
+
+```go
+	f, _ := os.OpenFile("D:/golog.log", os.O_APPEND|os.O_CREATE, 07777)
+	defer f.Close()
+	logger := log.New(f, "[info]\t", log.Ltime)
+	logger.Println("输出日志信息")
+```
+
+####  线程休眠
+
+* Go语言中main()函数为主线程(协程),程序是从上向下执行的
+* 可以通过time包下的Sleep(n)让程序阻塞多少纳秒
+
+```go
+   fmt.Println("1")
+   //单位是纳秒,表示阻塞多长时间
+   //e9表示10的9次方
+   time.Sleep(1e9)
+   fmt.Println("2")
+```
+
+#### 延迟执行
+
+* 延迟指定时间后执行一次,但是需要注意在触发时程序没有结束
+
+```go
+  fmt.Println("开始")
+   //2秒后执行匿名函数
+   time.AfterFunc(2e9, func() {
+      fmt.Println("延迟延迟触发")
+   })
+   time.Sleep(10e9)//一定要休眠,否则程序结束了
+   fmt.Println("结束")
+```
+
+  
+
+****
+
+####  WaitGroup简介
+
+* Golang中sync包提供了基本同步基元,如互斥锁等.除了Once和WaitGroup类型,	大部分都只适用于低水平程序线程,高水平同步线程使用channel通信更好一些
+* WaitGroup直译为等待组,其实就是计数器,只要计数器中有内容将一直阻塞
+* 在Golang中WaitGroup存在于sync包中,在sync包中类型都是不应该被拷贝的.源码定义如下
+
+```go
+// A WaitGroup waits for a collection of goroutines to finish.
+// The main goroutine calls Add to set the number of
+// goroutines to wait for. Then each of the goroutines
+// runs and calls Done when finished. At the same time,
+// Wait can be used to block until all goroutines have finished.
+//
+// A WaitGroup must not be copied after first use.
+type WaitGroup struct {
+	noCopy noCopy
+
+	// 64-bit value: high 32 bits are counter, low 32 bits are waiter count.
+	// 64-bit atomic operations require 64-bit alignment, but 32-bit
+	// compilers do not ensure it. So we allocate 12 bytes and then use
+	// the aligned 8 bytes in them as state.
+	state1 [12]byte
+	sema   uint32
+}
+```
+
+* Go语言标准库中WaitGroup只有三个方法
+  * Add(delta int)表示向内部计数器添加增量(delta),其中参数delta可以是负数
+  * Done()表示减少WaitGroup计数器的值,应当在程序最后执行.相当于Add(-1)
+  * Wait()表示阻塞直到WaitGroup计数器为0
+
+```go
+type WaitGroup
+  func (wg *WaitGroup) Add(delta int)
+  func (wg *WaitGroup) Done()
+  func (wg *WaitGroup) Wait()
+```
+
+
+##### 代码示例
+
+* 使用WaitGroup可以有效解决goroutine未执行完成主协程执行完成,导致程序结束,goroutine未执行问题
+
+```go
+package main
+
+import (
+   "fmt"
+   "sync"
+)
+
+var wg sync.WaitGroup
+
+func main() {
+
+   for i := 1; i <= 3; i++ {
+      wg.Add(1)
+      go demo(i)
+   }
+   //阻塞,知道WaitGroup队列中所有任务执行结束时自动解除阻塞
+   fmt.Println("开始阻塞")
+   wg.Wait()
+   fmt.Println("任务执行结束,解除阻塞")
+
+}
+
+func demo(index int) {
+   for i := 1; i <= 5; i++ {
+      fmt.Printf("第%d次执行,i的值为:%d\n", index, i)
+   }
+   wg.Done()
+}
+```
+
+#### Channel
+
+* 线程通信在每个编程语言中都是重难点,在Golang中提供了语言级别的goroutine之间通信:channel
+* channel是进程内通信方式,每个channel只能传递一个类型的值.这个类型需要在声明channel时指定
+* channel在Golang中主要的两个作用
+  * 同步
+  * 通信
+* Go语言中channel的关键字是chan
+* 声明channel的语法
+
+```go
+var 名称 chan 类型
+var 名称 chan <- 类型 //只写
+var 名称 <- chan 类型//只读
+名称:=make(chan int) //无缓存channel
+名称:=make(chan int,0)//无缓存channel
+名称:=make(chan int,100)//有缓存channel
+```
+
+* 操作channel的语法:(假设定义一个channel名称为ch)
+
+```go
+ch <- 值 //向ch中添加一个值
+<- ch //从ch中取出一个值
+a:=<-ch //从ch中取出一个值并赋值给a
+a,b:=<-ch//从ch中取出一个值赋值给a,如果ch已经关闭或ch中没有值,b为false
+```
+
+
+##### 代码示例
+
+* 简单无缓存通道代码示例
+  * 此代码中如果没有从channel中取值c,d=<-ch语句,程序结束时go func并没有执行
+  * 下面代码示例演示了同步操作,类似与WaitGroup功能,保证程序结束时goroutine已经执行完成
+  * 向goroutine中添加内容的代码会阻塞goroutine执行,所以要把ch<-1放入到goroutine有效代码最后一行
+  * **无论是向channel存数据还是取数据都会阻塞**
+  * close(channel)关闭channel,关闭后只读不可写
+
+```go
+package main
+
+import (
+   "fmt"
+)
+
+func main() {
+   ch := make(chan int)
+   go func() {
+      fmt.Println("进入goroutine")
+      // 添加一个内容后控制台输出:1 true
+      //ch<-1
+
+      //关闭ch控制台输出:0 false
+      close(ch)
+   }()
+   c, d := <-ch 
+   fmt.Println(c, d)
+   fmt.Println("程序执行结束")
+}
+```
+
+* 使用channel实现goroutine之间通信
+  * channel其实就是消息通信机制实现方案,在Golang中没有使用共享内存完成线程通信,而是使用channel实现goroutine之间通信.
+
+```go
+package main
+
+import (
+   "fmt"
+)
+
+func main() {
+   //用于goroutine之间传递数据
+   ch := make(chan string)
+   //用于控制程序执行
+   ch2 := make(chan string)
+   go func() {
+      fmt.Println("执行第一个goroutine,等待第二个goroutine传递数据")
+      content := <-ch
+      fmt.Println("接收到的数据为:", content)
+      ch2 <- "第一个"
+   }()
+   go func() {
+      fmt.Println("进入到第二个,开始传递数据")
+      ch <- "内容随意"
+      close(ch)
+      fmt.Println("发送数据完成")
+      ch2 <- "第二个"
+   }()
+   result1 := <-ch2
+   fmt.Println(result1, "执行完成")
+   result2 := <-ch2
+   fmt.Println(result2, "执行完成")
+   fmt.Println("程序执行结束")
+}
+```
+
+* 可以使用for range获取channel中内容
+  * 不需要确定channel中数据个数
+
+```go
+func main() {
+   ch:=make(chan string)
+   ch2:=make(chan int)
+   go func() {
+      for i:=97;i<97+26;i++{
+         ch <- strconv.Itoa(i)
+      }
+      ch2<-1
+   }()
+
+   go func() {
+      for c := range ch{
+         fmt.Println("取出来的",c)
+      }
+   }()
+   <-ch2
+   fmt.Println("程序结束")
+}
+```
+
+* channel是安全的.多个goroutine同时操作时,同一时间只能有一个goroutine存取数据
+
+```go
+package main
+
+import (
+   "time"
+   "fmt"
+)
+
+func main() {
+   ch := make(chan int)
+
+   for i := 1; i < 5; i++ {
+      go func(j int) {
+         fmt.Println(j, "开始")
+         ch <- j
+         fmt.Println(j, "结束")
+      }(i)
+   }
+
+   for j := 1; j < 5; j++ {
+      time.Sleep(2 * time.Second)
+      <-ch
+   }
+}
+```
+
+  
+
+#### select简介
+
+* Golang中select和switch结构特别像,但是select中case的条件只能是I/O
+* select 的语法(condition是条件)
+
+```go
+select{
+  case condition:
+  case condition:
+  default:
+}
+```
+
+* select执行过程:
+  * 每个case必须是一个IO操作
+  * 哪个case可以执行就执行哪个
+  * 多个case都可以执行,随机执行一个
+  * 所有case都不能执行时,执行default
+  * 所有case都不能执行,且没有default,将会阻塞
+* 代码示例
+
+```go
+func main() {
+   runtime.GOMAXPROCS(1)
+   ch1 := make(chan int, 1)
+   ch2 := make(chan string, 1)
+   ch1 <- 1
+   ch2 <- "hello"
+   select {
+   case value := <-ch1:
+      fmt.Println(value)
+   case value := <-ch2:
+      fmt.Println(value)
+   }
+}
+```
+
+* select多和for循环结合使用,下面例子演示出了一直在接收消息的例子
+
+```go
+package main
+
+import (
+	"fmt"
+)
+
+func main() {
+	ch := make(chan int)
+	for i := 1; i <= 5; i++ {
+		go func(arg int) {
+			ch <- arg
+		}(i)
+	}
+  //如果是一直接受消息,应该是死循环for{},下面代码中是明确知道消息个数
+	for i := 1; i <= 5; i++ {
+		select {
+		case c := <-ch:
+			fmt.Println("取出数据", c)
+		default:
+			//没有default会出现死锁
+		}
+	}
+	fmt.Println("程序执行结束")
+}
+
+```
+
+* break可以对select生效,如果for中嵌套select,break选择最近结构
