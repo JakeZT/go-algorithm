@@ -1,22 +1,17 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
 
-func mySet(arr []interface{}) (res []interface{}) {
-	hashSet := make(map[interface{}]struct{})
-	for _, v := range arr {
-		hashSet[v] = struct{}{}
-	}
-	for key := range hashSet {
-		res = append(res, key)
-		if key == 111 {
-			break
-		}
-	}
-	return
-}
-func mainT() {
-	data := []interface{}{"Hello", "World", 111, 213, 3213, 213, "World"}
-	var res = mySet(data)
+	"github.com/thoas/go-funk"
+)
+
+func main() {
+	funk.IndexOf([]string{"foo", "bar"}, "bar") // 1
+	var res int
+	res = funk.IndexOf([]string{"foo", "bar"}, func(value string) bool {
+		return value == "bar"
+	}) // 1
 	fmt.Println(res)
+	funk.IndexOf([]string{"foo", "bar"}, "gilles") // -1
 }

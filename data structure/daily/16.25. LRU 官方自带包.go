@@ -4,7 +4,7 @@ import (
 	"container/list"
 )
 
-func mainLRU() {
+func mainLRU1() {
 
 }
 

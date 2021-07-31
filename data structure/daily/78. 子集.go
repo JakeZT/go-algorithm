@@ -1,6 +1,6 @@
 package main
 
-func main() {}
+func main78() {}
 
 // func subsets(nums []int) [][]int {
 // 	res := [][]int{}
