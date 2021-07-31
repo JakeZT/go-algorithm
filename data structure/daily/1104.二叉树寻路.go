@@ -4,7 +4,7 @@ import (
 	"math"
 )
 
-func main() {
+func main1104() {
 	pathInZigZagTree(26)
 }
 
