@@ -18,7 +18,7 @@ M             1000
 解释: L = 50, V = 5, III = 3.
 
 */
-func main() {
+func main12() {
 
 }
 
