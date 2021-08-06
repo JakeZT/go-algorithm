@@ -1,22 +1,28 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+)
 
-func mySet(arr []interface{}) (res []interface{}) {
-	hashSet := make(map[interface{}]struct{})
-	for _, v := range arr {
-		hashSet[v] = struct{}{}
+func main() {
+	//str := "abc"
+	str := "hi,你好"
+
+	//下标遍历
+	strRune2 := []rune(str)
+	for i, v := range strRune2 {
+		fmt.Printf("str[%d]=%v\n", i, string(v))
 	}
-	for key := range hashSet {
-		res = append(res, key)
-		if key == 111 {
-			break
-		}
+
+	//for...range遍历
+	for i := 0; i < len(str); i++ {
+		// fmt.Printf("str[%d]=%v\n", i, string(str[i]))
 	}
-	return
-}
-func mainT() {
-	data := []interface{}{"Hello", "World", 111, 213, 3213, 213, "World"}
-	var res = mySet(data)
-	fmt.Println(res)
+
+	//转为[]rune类型，再下边遍历
+	strRune := []rune(str)
+	for i := 0; i < len(strRune); i++ {
+		fmt.Printf("strRune[%d]=%v\n", i, string(strRune[i]))
+	}
+
 }

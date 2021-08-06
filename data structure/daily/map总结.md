@@ -17,3 +17,35 @@ func mySet(arr []interface{}) (res []interface{}) {
 	return
 }
 ```
+
+Map
+
+```go
+obj:=make(map[string]int)
+delete(obj,"alice")
+```
+
+自定义任意组合的 map 和 Arr
+
+```go
+
+type myMap map[interface{}]interface{}
+type myArr []interface{}
+
+func MapToSlice(input myMap) myArr {
+	output := make(myArr, 0)
+	for _, val := range input {
+		output = append(output, val)
+	}
+	return output
+}
+func main() {
+	var test = myMap{
+		0: "Iron Man",
+		1: "Soul",
+	}
+	test[2] = "jake"
+	res := MapToSlice(test)
+	fmt.Println(res)
+}
+```

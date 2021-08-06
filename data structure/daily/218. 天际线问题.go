@@ -12,12 +12,20 @@ func main218() {
 	getSkyline(temp)
 }
 
+func myMax(arr []int) (_max int) {
+	for _, i := range arr {
+		if i > _max {
+			_max = i
+		}
+	}
+	return
+}
 func arrSort(pq [][]int) {
-	sort.SliceStable(pq, func(a, b int) bool {
-		if pq[a][0] == pq[b][0] {
-			return pq[a][1] < pq[b][1]
+	sort.Slice(pq, func(i, j int) bool {
+		if pq[i][0] == pq[j][0] {
+			return pq[i][1] < pq[j][1]
 		} else {
-			return pq[b][0] <= pq[b][0]
+			return pq[i][0] <= pq[j][0]
 		}
 	})
 }
@@ -29,18 +37,11 @@ func remove(arr []int, tar int) []int {
 			idx = key
 		}
 	}
+	if idx == -1 {
+		return arr
+	}
 	arr = append(arr[:idx], arr[idx+1:]...)
 	return arr
-}
-
-func myMax(a []int) int {
-	m := 0
-	for _, i := range a {
-		if i > m {
-			m = i
-		}
-	}
-	return m
 }
 
 func getSkyline(buildings [][]int) [][]int {

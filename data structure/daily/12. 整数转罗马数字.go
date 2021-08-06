@@ -23,18 +23,19 @@ func main12() {
 }
 
 var chars = []string{"I", "II", "III", "IV", "V", "IX", "X", "XL", "L", "XC", "C", "CD", "D", "CM", "M"}
-var list = []int{1, 2, 3, 4, 5, 9, 10, 40, 50, 90, 100, 400, 500, 900, 1000}
+var _list = [15]int{1, 2, 3, 4, 5, 9, 10, 40, 50, 90, 100, 400, 500, 900, 1000}
 
 func intToRoman(num int) string {
 	ans := strings.Builder{}
 	index := len(chars) - 1
 	for num != 0 {
-		if num-list[index] >= 0 {
-			num -= list[index]
+		if num-_list[index] >= 0 {
+			num -= _list[index]
 			ans.WriteString(chars[index]) // faster than '+'
 		} else {
 			index--
 		}
 	}
 	return ans.String()
+
 }
