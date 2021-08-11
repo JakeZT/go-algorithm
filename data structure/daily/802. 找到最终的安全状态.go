@@ -1,6 +1,6 @@
 package main
 
-func main() {}
+func main802() {}
 
 /*
 输入：graph = [[1,2],[2,3],[5],[0],[5],[],[]]

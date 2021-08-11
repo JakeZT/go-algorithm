@@ -1,6 +1,6 @@
 package main
 
-func main() {}
+func main3() {}
 
 func lengthOfLongestSubstring(s string) int {
 	window := make(map[byte]int) //可以用string类型，但实际存储的都是byte

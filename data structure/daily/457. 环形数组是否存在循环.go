@@ -1,6 +1,6 @@
 package main
 
-func main() {}
+func main457() {}
 
 /*
    """符号相同保证是同一个方向移动"""

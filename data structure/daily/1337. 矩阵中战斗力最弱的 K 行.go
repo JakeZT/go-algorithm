@@ -4,7 +4,7 @@ import (
 	"sort"
 )
 
-func main() {
+func main1337() {
 
 }
 

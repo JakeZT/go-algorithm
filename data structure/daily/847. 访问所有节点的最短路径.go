@@ -1,6 +1,6 @@
 package main
 
-func main() {}
+func main847() {}
 
 /*
 			curIndex 表示当前位于的节点编号；
