@@ -2,7 +2,17 @@
 
 map 如果用 for range 遍历, 顺序每次是随机的，return 或者 break 可以跳出 for range
 
+检测是否有一个值
+
+```go
 原生方法没有 linkedHashMap，只能自己实现，或者用第三方包
+if val, ok = map1[key1]; ok{
+
+}
+
+删除一个键 key
+delete(map1, key)
+```
 
 ```go
 func mySet(arr []interface{}) (res []interface{}) {

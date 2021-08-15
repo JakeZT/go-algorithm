@@ -2,27 +2,24 @@ package main
 
 import (
 	"fmt"
+	"math"
+	"strconv"
 )
 
+/*  */
+func FormatFloat(val float64, number int) (float64, error) {
+	d := 1.0
+	d = math.Pow10(number)
+	base := "%." + strconv.Itoa(number) + "f"
+	res := fmt.Sprintf(base, math.Trunc(val*d)/d)
+	// 或者
+	// res := strconv.FormatFloat(math.Trunc(val*d)/d, 'f', -1, 64)
+	return strconv.ParseFloat(res, 64)
+}
+
 func main() {
-	//str := "abc"
-	str := "hi,你好"
-
-	//下标遍历
-	strRune2 := []rune(str)
-	for i, v := range strRune2 {
-		fmt.Printf("str[%d]=%v\n", i, string(v))
-	}
-
-	//for...range遍历
-	for i := 0; i < len(str); i++ {
-		// fmt.Printf("str[%d]=%v\n", i, string(str[i]))
-	}
-
-	//转为[]rune类型，再下边遍历
-	strRune := []rune(str)
-	for i := 0; i < len(strRune); i++ {
-		fmt.Printf("strRune[%d]=%v\n", i, string(strRune[i]))
-	}
-
+	numF := 1.2253120023223232
+	val, _ := FormatFloat(numF, 0)
+	fmt.Println(val)
+	// fmt.Println(reflect.TypeOf(val), val)
 }
