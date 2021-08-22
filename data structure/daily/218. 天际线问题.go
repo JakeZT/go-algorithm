@@ -1,4 +1,4 @@
-package main
+package skyline
 
 import (
 	"sort"
@@ -11,11 +11,42 @@ func main218() {
 	// temp=[[2,9,10],[3,7,15],[5,12,12],[15,20,10],[19,24,8]]
 	getSkyline(temp)
 }
+func getSkyline(buildings [][]int) [][]int {
+	var (
+		pq  = [][]int{}
+		pre = -1
+	)
+	res := new([][]int)
+	for _, b := range buildings {
+		cur := [][]int{
+			{b[0], -b[2]},
+			{b[1], b[2]},
+		}
+		pq = append(pq, cur...)
+	}
+	arrSort(pq)
+	heights := new([]int)
+	*heights = []int{0}
+	for _, h := range pq {
+		if h[1] < 0 {
+			*heights = append(*heights, -h[1])
+		} else {
+			remove(heights, h[1])
+		}
+		maxHeight := max(heights)
+		if pre != maxHeight {
+			cur := []int{h[0], maxHeight}
+			*res = append(*res, cur)
+			pre = maxHeight
+		}
+	}
+	return *res
+}
 
-func myMax(arr []int) (_max int) {
-	for _, i := range arr {
-		if i > _max {
-			_max = i
+func max(arr *[]int) (max int) {
+	for _, i := range *arr {
+		if i > max {
+			max = i
 		}
 	}
 	return
@@ -30,48 +61,17 @@ func arrSort(pq [][]int) {
 	})
 }
 
-func remove(arr []int, tar int) []int {
+func remove(arr *[]int, tar int) {
 	idx := -1
-	for key := 0; key <= len(arr)-1; key++ {
-		if arr[key] == tar {
-			idx = key
+	for i, val := range *arr {
+		if val == tar {
+			idx = i
+			goto Insert
 		}
 	}
 	if idx == -1 {
-		return arr
+		return
 	}
-	arr = append(arr[:idx], arr[idx+1:]...)
-	return arr
-}
-
-func getSkyline(buildings [][]int) [][]int {
-	var (
-		res = [][]int{}
-		pq  = [][]int{}
-		pre = -1
-	)
-	for _, b := range buildings {
-		cur := [][]int{
-			{b[0], -b[2]},
-			{b[1], b[2]},
-		}
-		pq = append(pq, cur...)
-	}
-	arrSort(pq)
-	heights := []int{0}
-	for _, h := range pq {
-		if h[1] < 0 {
-			heights = append(heights, -h[1])
-		} else {
-			heights = remove(heights, h[1])
-		}
-		maxHeight := myMax(heights)
-		if pre != maxHeight {
-			cur := []int{h[0], maxHeight}
-			res = append(res, cur)
-			pre = maxHeight
-		}
-	}
-	return res
-
+Insert:
+	*arr = append((*arr)[:idx], (*arr)[idx+1:]...)
 }
