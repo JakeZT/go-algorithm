@@ -158,10 +158,10 @@ func addOn() {
 	}
 
 	vaf := reflect.ValueOf(&today)
-	vf := vaf.Elem()
-	hint := vf.FieldByName("Hint")
+	deepE := vaf.Elem()
+	hint := deepE.FieldByName("Hint")
 	item := reflect.NewAt(hint.Type(), unsafe.Pointer(hint.UnsafeAddr())).Elem()
-	item.SetString("Have a nice weekend!")
+	item.SetString("Bad News. Monday’s coming up")
 
 	fmt.Printf("Hi there [%#v]\n", today)
 
