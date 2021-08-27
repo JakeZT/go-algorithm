@@ -1,8 +1,6 @@
 package leetcode297
 
 import (
-	"fmt"
-	"reflect"
 	"strconv"
 	"strings"
 )
@@ -39,13 +37,13 @@ func (this *Codec) serialize(root *TreeNode) string {
 	for i := 0; i < len(sb); i++ {
 		str.WriteString(sb[i])
 	}
-	fmt.Println(reflect.ValueOf(str.String())) //"1,2,null,null,3,4,null,null,5,null,null,"
+	//	fmt.Println(reflect.ValueOf(str.String())) //"1,2,null,null,3,4,null,null,5,null,null,"
 	return str.String()
 }
 
 func (this *Codec) deserialize(data string) *TreeNode {
 	nodes := strings.Split(data, ",")
-	fmt.Println(reflect.ValueOf(nodes)) //[1 2 null null 3 4 null null 5 null null ]
+	//	fmt.Println(reflect.ValueOf(nodes)) //[1 2 null null 3 4 null null 5 null null ]
 	var build func() *TreeNode
 	build = func() *TreeNode {
 		if len(nodes) == 0 {
