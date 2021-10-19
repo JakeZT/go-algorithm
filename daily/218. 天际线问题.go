@@ -11,10 +11,9 @@ func main218() {
 	// temp=[[2,9,10],[3,7,15],[5,12,12],[15,20,10],[19,24,8]]
 	getSkyline(temp)
 }
-
 func getSkyline(buildings [][]int) [][]int {
 	var (
-		pq  = PQ{}
+		pq  = [][]int{}
 		pre = -1
 	)
 	res := new([][]int)
@@ -25,8 +24,7 @@ func getSkyline(buildings [][]int) [][]int {
 		}
 		pq = append(pq, cur...)
 	}
-	// arrSort(pq)
-	sort.Sort(&pq)
+	arrSort(pq)
 	heights := new([]int)
 	*heights = []int{0}
 	for _, h := range pq {
@@ -53,42 +51,27 @@ func max(arr *[]int) (max int) {
 	}
 	return
 }
-
-// 1111111
-type PQ [][]int
-
-func (pq *PQ) Len() int      { return len(*pq) }
-func (pq *PQ) Swap(i, j int) { (*pq)[i], (*pq)[j] = (*pq)[j], (*pq)[i] }
-func (pq *PQ) Less(i, j int) bool {
-	if (*pq)[i][0] == (*pq)[j][0] {
-		return (*pq)[i][1] < (*pq)[j][1]
-	} else {
-		return (*pq)[i][0] <= (*pq)[j][0]
-	}
-
+func arrSort(pq [][]int) {
+	sort.Slice(pq, func(i, j int) bool {
+		if pq[i][0] == pq[j][0] {
+			return pq[i][1] < pq[j][1]
+		} else {
+			return pq[i][0] <= pq[j][0]
+		}
+	})
 }
-
-// 222222
-// func arrSort(pq [][]int) {
-// sort.Slice(pq, func(i, j int) bool {
-// 	if pq[i][0] == pq[j][0] {
-// 		return pq[i][1] < pq[j][1]
-// 	} else {
-// 		return pq[i][0] <= pq[j][0]
-// 	}
-// })
-// }
 
 func remove(arr *[]int, tar int) {
 	idx := -1
 	for i, val := range *arr {
 		if val == tar {
 			idx = i
-			break
+			goto Insert
 		}
 	}
 	if idx == -1 {
 		return
 	}
+Insert:
 	*arr = append((*arr)[:idx], (*arr)[idx+1:]...)
 }
